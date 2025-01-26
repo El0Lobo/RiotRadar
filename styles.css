@@ -13,7 +13,7 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url("/demo.png");
+  background-image: url("demo.png");
   background-size: cover;
   background-position: center;
   z-index: -1;

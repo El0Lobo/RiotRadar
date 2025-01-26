@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riot Radar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nova+Round&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=New+Rocker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <script defer src="script.js"></script>
+</head>
+<script>// Show the info div on page load
+document.addEventListener("DOMContentLoaded", () => {
+  const faqLink = document.getElementById("faqLink");
+  const faqModal = document.getElementById("faqModal");
+  const faqClose = document.getElementById("faqClose");
+
+  // Open the FAQ modal when the link is clicked
+  faqLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    faqModal.classList.add("open");
+  });
+
+  // Close the FAQ modal when the close button is clicked
+  faqClose.addEventListener("click", () => {
+    faqModal.classList.remove("open");
+  });
+
+  // Close the modal when clicking outside of it
+  document.addEventListener("click", (e) => {
+    if (e.target === faqModal) {
+      faqModal.classList.remove("open");
+    }
+  });
+});
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const infoDiv = document.getElementById("info");
+    const logo = document.querySelector(".logo");
+    const checkboxes = document.querySelectorAll('.content input[type="checkbox"]');
+    const cityInput = document.getElementById("cityInput");
+    const citySuggestions = document.getElementById("citySuggestions");
+
+    let map; // Assuming map is initialized elsewhere in your code
+
+    // Initially show the info div
+    infoDiv.style.display = "block";
+
+    // Add a click event listener to the logo
+    logo.addEventListener("click", () => {
+      // Toggle visibility of the info div
+      if (infoDiv.style.display === "block") {
+        infoDiv.style.display = "none";
+      } else {
+        infoDiv.style.display = "block";
+      }
+    });
+
+    // Function to hide the info div
+    function hideInfo() {
+      if (infoDiv.style.display === "block") {
+        infoDiv.style.display = "none";
+      }
+    }
+
+    // Add event listeners for interactions that should hide the info div
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        hideInfo();
+      });
+    });
+
+    cityInput.addEventListener("input", () => {
+      hideInfo();
+    });
+
+    citySuggestions.addEventListener("click", () => {
+      hideInfo();
+    });
+
+    if (map) {
+      map.on("click", () => {
+        hideInfo();
+      });
+    }
+  });
+  function toggleDropdown(id) {
+    const dropdown = document.getElementById(id);
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  }
+</script>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="radar2.png" alt="Riot Radar Logo" class="logo">
+      <h1 class="fallback">Riot Radar</h1>
+      <div class="pulse"></div>
+    </div>
+
+    <div id="eventModal" class="modal">
+      <button class="modal-close">&times;</button>
+      <div class="modal-header">Event Title</div>
+      <div class="modal-body">Event Details</div>
+    </div>
+
+    <div class="main">
+      <!-- Left Panel: Categories -->
+      <div class="side-panel" id="leftPanel">
+        <button class="toggle" onclick="togglePanel('leftPanel')"></button>
+    
+        <div class="content">
+          <h3>Search Events:</h3>
+          <input type="text" id="searchBar" placeholder="Type to search..." style="padding: 8px;" onkeyup="filterEvents()">
+          
+          <h3>Select Event Types:</h3>
+          <label class="event-checkbox concert">
+            <input type="checkbox" value="Concert"> Concert
+          </label><br>
+          <label class="event-checkbox demo">
+            <input type="checkbox" value="demo"> Demo
+          </label><br>
+          <label class="event-checkbox workshop">
+            <input type="checkbox" value="Workshop"> Workshop
+          </label><br>
+          <label class="event-checkbox talk">
+            <input type="checkbox" value="Talk"> Talk
+          </label><br>
+          <label class="event-checkbox party">
+            <input type="checkbox" value="Party"> Party
+          </label><br>
+          <label class="event-checkbox exhibition">
+            <input type="checkbox" value="Exhibition"> Exhibition
+          </label><br>
+          
+          <h3>Additional Filters:</h3>
+          <div class="dropdown">
+            <button class="dropdown-button" onclick="toggleDropdown('additionalFiltersDropdown')">Filters</button>
+            <div class="dropdown-content" id="additionalFiltersDropdown">
+              <!-- Cost Filter -->
+              <div class="nested-dropdown">
+                <button class="nested-dropdown-button" onclick="toggleDropdown('costFiltersDropdown')">Cost</button>
+                <div class="nested-dropdown-content" id="costFiltersDropdown">
+                  <label>
+                    <input type="checkbox" value="Free"> Free
+                  </label>
+                  <label>
+                    <input type="checkbox" value="Paid"> Paid
+                  </label>
+                  <label>
+                    <input type="checkbox" value="Donation"> Donation-Based
+                  </label>
+                </div>
+              </div>
+          
+              <!-- Time of Day Filter -->
+              <div class="nested-dropdown">
+                <button class="nested-dropdown-button" onclick="toggleDropdown('timeFiltersDropdown')">Time of Day</button>
+                <div class="nested-dropdown-content" id="timeFiltersDropdown">
+                  <label>
+                    <input type="checkbox" value="Morning"> Morning
+                  </label><br>
+                  <label>
+                    <input type="checkbox" value="Afternoon"> Afternoon
+                  </label><br>
+                  <label>
+                    <input type="checkbox" value="Evening"> Evening
+                  </label><br>
+                  <label>
+                    <input type="checkbox" value="Night"> Night
+                  </label>
+                </div>
+              </div>
+          
+              <!-- Age Restriction Filter -->
+              <div class="nested-dropdown">
+                <button class="nested-dropdown-button" onclick="toggleDropdown('ageFiltersDropdown')">Age Restriction</button>
+                <div class="nested-dropdown-content" id="ageFiltersDropdown">
+                  <label>
+                    <input type="checkbox" value="All Ages"> All Ages
+                  </label><br>
+                  <label>
+                    <input type="checkbox" value="18+"> 18+
+                  </label><br>
+                  <label>
+                    <input type="checkbox" value="21+"> 21+
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          
+          <h3>Select Date Range:</h3>
+          <input type="text" id="dateRangePicker" placeholder="Select Date Range 📅" style="width: 95%; padding: 8px;">
+          <br>
+          <label class="checkbox past">
+            <input type="checkbox" value="past"> Past Events
+          </label>
+          <br>
+        </div>
+      </div>
+
+      <!-- Middle Panel: Search Results -->
+      <div class="middle-panel">
+        <div id="spacer" class="spacer"></div>
+        <div class="info" id="info" style="position: relative; ">
+          <div class="intro-section">
+            <h1>Discover Anti-Facist Events Near You</h1>
+          </div>
+
+          <div class="content-section">
+            <h2>What We Offer</h2>
+            <p>
+              Our website is designed to help left-oriented individuals easily find concerts, workshops, and other
+              activities without the barriers of traditional platforms like Instagram. Unlike social media, our platform
+              requires no login, allowing anyone to explore events freely while ensuring the site is fully
+              Google-indexed for greater reach.
+            </p>
+          </div>
+
+          <div class="concern-section">
+            <h2>Addressing Concerns</h2>
+            <p>
+              We understand that some people may be concerned about exposing networks and platforms to left-oriented
+              content. but we believe it's more important to make left-oriented events visible and accessible. By
+              spreading the word and encouraging participation, we aim to bring more people together and strengthen the
+              community.
+            </p>
+          </div>
+
+          <div class="call-to-action-section">
+            <h2>Join the Movement</h2>
+            <p>
+              With just a few clicks, you can search for events, explore activities, and connect with like-minded
+              individuals—all while supporting a platform built with accessibility and inclusivity in mind.
+            </p>
+          </div>
+        </div>
+        <div class="results" id="results">
+          <h3>Search Results:</h3>
+          <ul id="resultList"></ul>
+        </div>
+        <div id="spacer2" class="spacer2"></div>
+      </div>
+
+      <!-- Right Panel: Map with Search and Radius -->
+      <div class="side-panel" id="rightPanel">
+        <button class="toggle" onclick="togglePanel('rightPanel')"></button>
+        <div class="content">
+          <div id="map" class="map"></div>
+          <div class="search-section">
+            <h3>Search for a City:</h3>
+            <input type="text" id="cityInput" placeholder="Start typing a city name..."
+              style="width: 90%; padding: 8px;">
+            <ul id="citySuggestions" class="city-suggestions"></ul>
+            <h3>Radius (km):</h3>
+            <input type="range" id="radiusInput" value="20" min="1" max="500" style="width: 100%;">
+            <span id="radiusValue">20 km</span>
+            <br>
+            <button id="searchButton">Search</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="https://acme-prototypes.com/" class="footer-link" target="_blank">
+        Made by 
+        <img src="ⒶCME (with Text).svg" alt="ⒶCME Logo" class="footer-logo">
+      </a>
+      <a href="#FAQ" class="footer-link" id="faqLink">FAQ</a>
+      <a href="#events" class="footer-link">Add your Event</a>
+      <a href="#contact" class="footer-link">Contact</a>
+      <a href="#stencils" class="footer-link">Stencils</a>
+      <a href="#other" class="footer-link">Other Tools</a>
+    </div>
+  </footer>
+
+
+<div class="modal" id="faqModal">
+  <div class="modal-header">
+    <h2>Kurzes Q&A zum RiotRadar</h2>
+    <button class="modal-close" id="faqClose">&times;</button>
+  </div>
+  <div class="modal-body">
+    <p><strong>“Aber wir haben doch Insta & Co.:</strong></p>
+    <ul>
+      <li>Nicht jeder hat Zugang zu einschlägigen Informationen auf Social Media.</li>
+      <li>Gängige Social-Media-Plattformen eignen sich ideologisch nicht als Sammelbecken.</li>
+      <li>
+        Einschlägige Verbreitung von Information über Social Media sind nicht konsistent und zu zerstreut:
+        Mal postet eine Gruppe/Organisation/Venue auf Instagram, mal auf Facebook, mal auf der hauseigenen Website,
+        mal werden Flyer verteilt, mal landen die Infos nur in WhatsApp-, Telegram- oder Signal-Gruppen.
+      </li>
+    </ul>
+    <p><strong>“Aber was ist mit der Privatsphäre/Sicherheit?”</strong></p>
+    <ul>
+      <li>RiotRadar möchte dazu beitragen, dass eure Aufrufe, Konzerte und Events Gehör finden, deswegen ist davon auszugehen, dass die Gründer_innen Gleichgesinnte sind.</li>
+      <li>
+        Ihr kennt die Menschen hinter RiotRadar nicht und könnt euch deshalb nicht sicher sein, ob sie die gesammelten Informationen
+        ausschließlich für Zwecke verwenden, die in eurem Sinne sind? Bei Social Media könnt ihr euch sicher sein, dass das nicht der Fall ist.
+      </li>
+      <li>
+        Angenommen, hinter RiotRadar verbergen sich schlimme Finger, die an eure Daten wollen, und die verbesserte Informationslage sowie
+        Vernetzungsmöglichkeiten mit deinen Gleichgesinnten seien eher ein Nebenprodukt ihrer Machenschaften. Dann wären RiotRadar auch
+        nicht verwerflicher als gängige Social-Media-Plattformen mit dem gravierenden Unterschied, dass sie euren Zwecken dienen.
+      </li>
+    </ul>
+    <p><strong>“Aber dann gelangen die Grundinfos über Demos, Konzerte, Workshop etc. ja auch schneller in die Hände von braunem Dreck etc.”</strong></p>
+    <ul>
+      <li>Dann sollen sie sich erstmal trauen, zu kommen.</li>
+      <li>Wir sind mehr.</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+
+</html>

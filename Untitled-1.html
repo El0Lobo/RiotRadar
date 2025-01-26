@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riot Radar</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+  <link href="https://fonts.googleapis.com/css2?family=Nova+Round&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=New+Rocker&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'New Rocker', serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('/demo.png');
+      background-size: cover;
+      background-position: center;
+      z-index: -1;
+      opacity: 1;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      max-width: 100vw;
+      margin: 0 auto;
+      height: 100vh;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+    }
+
+    .header img.logo {
+      height: 50px;
+      width: auto;
+    }
+
+    .main {
+      display: flex;
+      flex: 1;
+    }
+
+    .left-panel, .right-panel {
+      width: 300px;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .middle-panel {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .map {
+      height: 400px;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .results {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 10px;
+      background: #f9f9f9;
+    }
+
+    .results ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .results li {
+      margin: 10px 0;
+    }
+  </style>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="radar2.png" alt="Riot Radar Logo" class="logo">
+      <h1 class="fallback">Riot Radar</h1>
+    </div>
+
+    <div class="main">
+      <div class="left-panel">
+        <div class="event-types">
+          <h3>Select Event Types:</h3>
+          <label><input type="checkbox" value="Concert"> Concert</label><br>
+          <label><input type="checkbox" value="Workshop"> Workshop</label><br>
+          <label><input type="checkbox" value="Talk"> Talk</label><br>
+          <label><input type="checkbox" value="Party"> Party</label><br>
+          <label><input type="checkbox" value="Exhibition"> Exhibition</label><br>
+        </div>
+      </div>
+
+      <div class="middle-panel">
+        <div class="results" id="results">
+          <h3>Search Results:</h3>
+          <ul id="resultList"></ul>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="city-search">
+          <h3>Search for a City:</h3>
+          <input type="text" id="cityInput" placeholder="Start typing a city name..." style="width: 100%; padding: 8px;">
+          <ul id="citySuggestions" class="city-suggestions"></ul>
+        </div>
+        <div class="radius">
+          <h3>Radius (km):</h3>
+          <input type="range" id="radiusInput" value="10" min="1" max="250" style="width: 100%;">
+          <span id="radiusValue">10 km</span>
+        </div>
+        <button id="searchButton">Search</button>
+        <div id="map" class="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const cityInput = document.getElementById('cityInput');
+    const citySuggestions = document.getElementById('citySuggestions');
+    const radiusInput = document.getElementById('radiusInput');
+    const radiusValue = document.getElementById('radiusValue');
+    const searchButton = document.getElementById('searchButton');
+    const resultList = document.getElementById('resultList');
+
+    let map, marker, radiusCircle;
+
+    function initMap(lat = 51.1657, lng = 10.4515, zoom = 6) {
+      map = L.map('map').setView([lat, lng], zoom);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      map.on('click', (e) => {
+        if (marker) map.removeLayer(marker);
+        if (radiusCircle) map.removeLayer(radiusCircle);
+        marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+        updateRadiusCircle(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    function updateRadiusCircle(lat, lng) {
+      const radius = radiusInput.value * 1000;
+      if (radiusCircle) map.removeLayer(radiusCircle);
+      radiusCircle = L.circle([lat, lng], { radius }).addTo(map);
+    }
+
+    radiusInput.addEventListener('input', () => {
+      radiusValue.textContent = `${radiusInput.value} km`;
+      if (marker) {
+        const { lat, lng } = marker.getLatLng();
+        updateRadiusCircle(lat, lng);
+      }
+    });
+
+    cityInput.addEventListener('input', async () => {
+      const query = cityInput.value.trim();
+      if (query.length > 2) {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?city=${query}&format=json`);
+        const data = await response.json();
+        citySuggestions.innerHTML = data.map(city => `<li data-lat="${city.lat}" data-lng="${city.lon}">${city.display_name}</li>`).join('');
+      } else {
+        citySuggestions.innerHTML = '';
+      }
+    });
+
+    citySuggestions.addEventListener('click', (e) => {
+      if (e.target.tagName === 'LI') {
+        const lat = parseFloat(e.target.getAttribute('data-lat'));
+        const lng = parseFloat(e.target.getAttribute('data-lng'));
+        cityInput.value = e.target.textContent;
+        citySuggestions.innerHTML = '';
+        map.setView([lat, lng], 12);
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng]).addTo(map);
+        updateRadiusCircle(lat, lng);
+      }
+    });
+
+    searchButton.addEventListener('click', () => {
+      if (!marker) {
+        alert('Please select a location on the map.');
+        return;
+      }
+
+      const { lat, lng } = marker.getLatLng();
+      const radius = radiusInput.value * 1000;
+      const selectedEventTypes = Array.from(document.querySelectorAll('.event-types input:checked')).map(input => input.value);
+
+      const mockEvents = [
+        { name: "Concert in Berlin", type: "Concert", lat: 52.5200, lng: 13.4050, distance: 8 },
+        { name: "Art Workshop in Hamburg", type: "Workshop", lat: 53.5511, lng: 9.9937, distance: 15 }
+      ];
+
+      const filteredEvents = mockEvents.filter(event => {
+        const distance = map.distance([lat, lng], [event.lat, event.lng]);
+        return selectedEventTypes.includes(event.type) && distance <= radius;
+      });
+
+      resultList.innerHTML = filteredEvents.length
+        ? filteredEvents.map(event => `<li>${event.name}</li>`).join('')
+        : "<li>No events found within the selected radius.</li>";
+    });
+
+    initMap();
+  </script>
+</body>
+</html>

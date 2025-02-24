@@ -356,8 +356,8 @@ button:hover {
   transform: translateY(-50%);
   width: 24px;
   height: 24px;
-  mask: url("/location.svg"); /* Apply the SVG mask */
-  -webkit-mask: url("/location.svg") no-repeat center;
+  mask: url("./location.svg"); /* Apply the SVG mask */
+  -webkit-mask: url("./location.svg") no-repeat center;
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: cover;

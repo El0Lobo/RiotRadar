@@ -19,6 +19,49 @@ const eventMarkers = [];
 
 // Mock Events Data
 const mockEvents = [
+  // Past Events
+  {
+    name: "Concert in Hamburg",
+    type: "Concert",
+    lat: 53.5511,
+    lng: 9.9937,
+    description: "A legendary concert in Hamburg.",
+    date: "15.09.2023",
+  },
+  {
+    name: "Art Workshop in Stuttgart",
+    type: "Workshop",
+    lat: 48.7758,
+    lng: 9.1829,
+    description: "A creative gathering for artists.",
+    date: "20.07.2023",
+  },
+  {
+    name: "Underground Party in Cologne",
+    type: "Party",
+    lat: 50.9375,
+    lng: 6.9603,
+    description: "A wild night at a secret location.",
+    date: "11.05.2023",
+  },
+  {
+    name: "Philosophy Talk in Bremen",
+    type: "Talk",
+    lat: 53.0793,
+    lng: 8.8017,
+    description: "Discussing modern philosophy trends.",
+    date: "05.12.2022",
+  },
+  {
+    name: "Historical Exhibition in Dresden",
+    type: "Exhibition",
+    lat: 51.0504,
+    lng: 13.7373,
+    description: "A collection of historical artifacts.",
+    date: "08.03.2023",
+  },
+
+  // Future Events
   {
     name: "Concert in Berlin",
     type: "Concert",
@@ -59,7 +102,89 @@ const mockEvents = [
     description: "An engaging exhibition in Leipzig.",
     date: "31.01.2025",
   },
+  {
+    name: "Concert in Düsseldorf",
+    type: "Concert",
+    lat: 51.2277,
+    lng: 6.7735,
+    description: "Rock bands lighting up the stage.",
+    date: "10.03.2025",
+  },
+  {
+    name: "Workshop in Nuremberg",
+    type: "Workshop",
+    lat: 49.4521,
+    lng: 11.0767,
+    description: "A hands-on workshop for creators.",
+    date: "15.03.2025",
+  },
+  {
+    name: "Party in Hanover",
+    type: "Party",
+    lat: 52.3759,
+    lng: 9.732,
+    description: "A lively party with DJs and drinks.",
+    date: "22.03.2025",
+  },
+  {
+    name: "Talk in Mannheim",
+    type: "Talk",
+    lat: 49.4875,
+    lng: 8.466,
+    description: "A panel on the future of AI.",
+    date: "05.04.2025",
+  },
+  {
+    name: "Exhibition in Freiburg",
+    type: "Exhibition",
+    lat: 47.999,
+    lng: 7.8421,
+    description: "A modern art exhibition.",
+    date: "20.04.2025",
+  },
+  {
+    name: "Concert in Karlsruhe",
+    type: "Concert",
+    lat: 49.0069,
+    lng: 8.4037,
+    description: "An open-air concert in the park.",
+    date: "10.05.2025",
+  },
+  {
+    name: "Workshop in Münster",
+    type: "Workshop",
+    lat: 51.9607,
+    lng: 7.6261,
+    description: "Learn digital painting techniques.",
+    date: "25.05.2025",
+  },
+  {
+    name: "Party in Wiesbaden",
+    type: "Party",
+    lat: 50.0782,
+    lng: 8.2398,
+    description: "A summer rooftop party.",
+    date: "05.06.2025",
+  },
+  {
+    name: "Talk in Augsburg",
+    type: "Talk",
+    lat: 48.3705,
+    lng: 10.8978,
+    description: "A lecture on climate change.",
+    date: "15.06.2025",
+  },
+  {
+    name: "Exhibition in Essen",
+    type: "Exhibition",
+    lat: 51.4556,
+    lng: 7.0116,
+    description: "Photography from around the world.",
+    date: "30.06.2025",
+  },
 ];
+
+
 
 // Color mapping for event types
 const eventTypeColors = {
